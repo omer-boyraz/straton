@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+<K5project version="1.1">
+   <programs>
+      <pou name="Driver_Sleep" kind="subprogram" lge="ST" desc="Just a subFunc">
+         <vargroup name="Driver_Sleep" kind="LOCAL">
+            <var name="KmhIn" type="UINT" attr="IN"/>
+            <var name="AngleofSteer" type="REAL" attr="IN"/>
+            <var name="LaneDeparture" type="USINT" attr="IN"/>
+            <var name="FunctionEnable" type="BOOL" attr="IN"/>
+            <var name="LDWSTime" type="TIME" attr="IN"/>
+            <var name="NoLDWSTime" type="TIME" attr="IN"/>
+            <var name="Drowsy" type="BOOL" attr="OUT"/>
+            <var name="drowsy_time" type="BOOL"/>
+            <var name="AngleofSteerBuffer" type="REAL" dim="2"/>
+            <var name="LDWSTimerStart" type="BOOL"/>
+            <var name="LDWS_TON" type="TON"/>
+            <var name="NoLDWSTimerStart" type="BOOL"/>
+            <var name="LaneDepartureEnable" type="BOOL"/>
+            <var name="LaneDepartureWarning" type="BOOL"/>
+            <var name="NOLDWS_TON" type="TON"/>
+            <var name="Drowsy_TOF" type="TOF"/>
+            <var name="LDWS_R_TRIG" type="R_TRIG"/>
+            <var name="NoLDWS_R_TRIG" type="R_TRIG"/>
+            <var name="DrowsyTimerIn" type="BOOL"/>
+         </vargroup>
+<defines name="Driver_Sleep"></defines>
+         <srcdic>[CONTEXT]
+HEXADISPLAY=OFF
+EXPANDED=Driver_Sleep,(Retain)
+EXPANDED_SUBGROUPS=
+SORT_COL=0
+SORT_ASCENDING=ON
+NBCOL=12
+
+[COL0]
+POSITION=0
+NAME=Name
+TYPE=1
+TYPEEX=0
+WIDTH=352
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL1]
+POSITION=-1
+NAME=Value
+TYPE=8
+TYPEEX=0
+WIDTH=70
+SHOW=OFF
+FILTER=
+NBFILTER=0
+
+[COL2]
+POSITION=1
+NAME=Type
+TYPE=2
+TYPEEX=0
+WIDTH=80
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL3]
+POSITION=2
+NAME=Dim.
+TYPE=3
+TYPEEX=0
+WIDTH=65
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL4]
+POSITION=3
+NAME=Attrib.
+TYPE=4
+TYPEEX=0
+WIDTH=75
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL5]
+POSITION=4
+NAME=Syb.
+TYPE=9
+TYPEEX=0
+WIDTH=40
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL6]
+POSITION=5
+NAME=Init value
+TYPE=5
+TYPEEX=0
+WIDTH=174
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL7]
+POSITION=6
+NAME=User Group
+TYPE=14
+TYPEEX=0
+WIDTH=102
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL8]
+POSITION=7
+NAME=Tag
+TYPE=6
+TYPEEX=0
+WIDTH=50
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL9]
+POSITION=8
+NAME=Description
+TYPE=7
+TYPEEX=0
+WIDTH=500
+SHOW=ON
+FILTER=
+NBFILTER=0
+
+[COL10]
+POSITION=-1
+NAME=Properties
+TYPE=10
+TYPEEX=1
+WIDTH=100
+SHOW=OFF
+FILTER=
+NBFILTER=0
+
+[COL11]
+POSITION=-1
+NAME=Public
+TYPE=17
+TYPEEX=0
+WIDTH=50
+SHOW=OFF
+FILTER=
+NBFILTER=0
+
+[FIND]
+WHAT=
+FLAGS=65537
+
+[REPLACE]
+WHAT=
+REPLACE=
+FLAGS=65537
+UPDATE=ON
+
+         </srcdic>
+         <sourceSTIL>             
+///////////////////////////////////////////////////////////////////////////////////////
+IF(FunctionEnable)THEN
+//LDWS State Assignment
+
+    IF(LaneDeparture &lt; 3)THEN
+    
+    LaneDepartureEnable := FALSE;
+    
+    ELSE
+    
+    LaneDepartureEnable := TRUE;
+    
+        IF(LaneDeparture = 5)THEN
+
+        LaneDepartureWarning := TRUE; 
+
+        ELSE
+        
+        LaneDepartureWarning := FALSE; 
+                    
+        END_IF;    
+    
+    END_IF;
+    
+//Steer Rad to degree
+    AngleofSteer :=  AngleofSteer*180/3.14;
+    
+//Steer Angle Difference
+    AngleofSteerBuffer[1] := AngleofSteer;
+    AngleofSteer := AngleofSteerBuffer[1] - AngleofSteerBuffer[0];
+    AngleofSteerBuffer[0] := AngleofSteerBuffer[1];
+
+//Main Algorithm
+
+    IF (KmhIn &gt; 70)THEN 
+    IF(AngleofSteer &lt; 0.1)THEN
+        
+        IF( LaneDepartureEnable ) THEN
+           IF (LaneDepartureWarning)THEN
+             LDWSTimerStart := TRUE;
+             NoLDWSTimerStart := FALSE;
+           ELSE
+             LDWSTimerStart := FALSE;      
+             NoLDWSTimerStart := TRUE;
+           END_IF;
+           
+        ELSE
+           LDWSTimerStart := FALSE;      
+           NoLDWSTimerStart := FALSE; 
+        END_IF;
+    ELSE
+    
+    LDWSTimerStart := FALSE;
+    NoLDWSTimerStart := FALSE;    
+        
+    END_IF;
+    
+    END_IF;
+
+
+    
+    LDWS_TON( LDWSTimerStart, LDWSTime);
+    NOLDWS_TON( NoLDWSTimerStart, NoLDWSTime);
+    
+    
+    LDWS_R_TRIG( LDWS_TON.Q );
+    NoLDWS_R_TRIG( NOLDWS_TON.Q );
+    
+    IF (LDWS_R_TRIG.Q OR  NoLDWS_R_TRIG.Q)THEN
+    
+    DrowsyTimerIn := TRUE;
+    
+    ELSE
+    
+    DrowsyTimerIn := FALSE;    
+        
+    END_IF;
+    
+    Drowsy_TOF( DrowsyTimerIn , T#5s );
+    
+END_IF;   
+    
+    
+    
+   
+         </sourceSTIL>
+      </pou>
+   </programs>
+</K5project>
