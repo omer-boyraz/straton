@@ -193,6 +193,7 @@ IF(FunctionEnable)THEN
     
 //Steer Angle Difference
     AngleofSteerBuffer[1] := AngleofSteer;
+    AngleofSteerBuffer[1] := AngleofSteer;
     AngleofSteer := AngleofSteerBuffer[1] - AngleofSteerBuffer[0];
     AngleofSteerBuffer[0] := AngleofSteerBuffer[1];
 
