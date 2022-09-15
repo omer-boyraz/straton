@@ -196,6 +196,7 @@ IF(FunctionEnable)THEN
     AngleofSteerBuffer[1] := AngleofSteer;
     AngleofSteer := AngleofSteerBuffer[1] - AngleofSteerBuffer[0];
     AngleofSteerBuffer[0] := AngleofSteerBuffer[1];
+    AngleofSteerBuffer[1] := AngleofSteer;
 
 //Main Algorithm
 
